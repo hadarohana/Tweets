@@ -5,14 +5,17 @@ import re
 import string
 import pickle
 import contractions
+import gensim
+from gensim.models import Word2Vec
 
 df = pd.read_csv("train.csv", encoding = 'latin-1' )
 train_text = df.iloc[:, 5] # dataframe of tweets for train set
 train_polarity = df.iloc[:, 0] # dataframe of polarities for train set
 
 def main():
-    preprocess_text(train_text)
+    #preprocess_text(train_text)
     train_w2v_model()
+    w2v_exploration()
 
 def preprocess_text(text_sample):
     from bs4 import BeautifulSoup
@@ -72,28 +75,21 @@ def preprocess_text(text_sample):
 
 def train_w2v_model():
     #run once to convert dataframe to list
-    pickle_in = open("processed_text_sample.pickle", "rb")
-    processed_text_sample = pickle.load(pickle_in)
-    preprocessed_text_list = processed_text_sample.tolist();
-    pickle_out = open("processed_text_list.pickle", "wb")
-    print(preprocessed_text_list)
-    pickle.dump(preprocessed_text_list, pickle_out)
-
+    pickle_in = open("processed_text_list.pickle", "rb")
+    processed_text_list = pickle.load(pickle_in)
 
     from gensim.models import Phrases
-    bigrams = Phrases(preprocessed_text_list, min_count = 2) # bigram model
-    from gensim.models import Word2Vec
-    w2v_model = Word2Vec(bigrams[preprocessed_text_list], size=300,  min_count=3, window=5, sg=1)
-    w2v_model.train()
-    pickle_out = open()
-    pickle_out = open("w2v_model.pickle", "wb")
-    pickle.dump(w2v_model, pickle_out)
+    bigrams = Phrases(processed_text_list, min_count = 2) # bigram model
+    w2v_model = Word2Vec(bigrams[processed_text_list], size=300,  min_count=3, window=5, sg=1)
+    print("model created")
+    w2v_model.train(bigrams[processed_text_list], total_examples= len(bigrams[processed_text_list]), epochs=10)
+    print("model training complete")
+    w2v_model.save("w2v_model")
 
-    #for tweet in processed_text_sample:
-     #   print(tweet)
-     #   preprocessed_text_list.append(tweet)
-   # pickle_out = open("processed_text_sample.pickle", "wb")
-    #pickle.dump(processed_text_list, pickle_out)
+
+def w2v_exploration():
+   w2v_model = Word2Vec.load("w2v_model")
+   print(list(w2v_model.wv.vocab))
 
 #def process_features_and_labels:
 
