@@ -7,16 +7,37 @@ import pickle
 import contractions
 import gensim
 from gensim.models import Word2Vec
+import sklearn
+import NaiveBayes
+from NaiveBayes import NaiveBayes
 
 df = pd.read_csv("train.csv", encoding = 'latin-1' )
-train_text = df.iloc[:, 5] # dataframe of tweets for train set
-train_polarity = df.iloc[:, 0] # dataframe of polarities for train set
+text = df.iloc[:, 5] # dataframe of tweets
+polarity = df.iloc[:, 0] # dataframe of polarities
 
 def main():
+    pickle_in = open("processed_text_list.pickle", "rb")
+    processed_text_list = pickle.load(pickle_in)
     #preprocess_text(train_text)
-    train_w2v_model()
-    w2v_exploration()
 
+    #train_w2v_model(processed_text_list)
+    #w2v_exploration()
+
+    #shuffle and partition dataset
+    from sklearn.utils import shuffle
+    data = pd.DataFrame({'text': processed_text_list, 'labels': polarity})
+    shuffle(data)
+    split_ratio = int(len(processed_text_list) * .8)
+    train_list = data['text'].loc[0:split_ratio].tolist()
+    test_list =  data['text'].loc[split_ratio:len(processed_text_list)].tolist()
+    labels_list = data['labels'].tolist()
+
+    naive_bayes = NaiveBayes(train_list, test_list, labels_list)
+    accuracy = naive_bayes.evaluate()
+    print("Naive Bayes accuracy: " + str(accuracy))
+
+
+#cleans, tokenizes, and lemmatizes tweets
 def preprocess_text(text_sample):
     from bs4 import BeautifulSoup
     from nltk.corpus import stopwords
@@ -73,10 +94,8 @@ def preprocess_text(text_sample):
     print("done preprocessing")
     print(processed_text_sample)
 
-def train_w2v_model():
-    #run once to convert dataframe to list
-    pickle_in = open("processed_text_list.pickle", "rb")
-    processed_text_list = pickle.load(pickle_in)
+# word2vec model trained on entire sentiment 140 corpus (including neutral text)
+def train_w2v_model(processed_text_list):
 
     from gensim.models import Phrases
     bigrams = Phrases(processed_text_list, min_count = 2) # bigram model
@@ -90,6 +109,8 @@ def train_w2v_model():
 def w2v_exploration():
    w2v_model = Word2Vec.load("w2v_model")
    print(list(w2v_model.wv.vocab))
+
+
 
 #def process_features_and_labels:
 

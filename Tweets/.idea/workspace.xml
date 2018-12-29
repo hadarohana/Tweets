@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e0e663a4-eb40-46b9-8e9e-d4b5b868f5f4" name="Default" comment="completed preprocessing and w2v model code">
+    <list default="true" id="e0e663a4-eb40-46b9-8e9e-d4b5b868f5f4" name="Default" comment="">
+      <change beforePath="" afterPath="$PROJECT_DIR$/NaiveBayes.py" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/Tweets.py" afterPath="$PROJECT_DIR$/Tweets.py" />
     </list>
@@ -17,11 +18,21 @@
       <file leaf-file-name="Tweets.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Tweets.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="318">
-              <caret line="83" column="26" lean-forward="false" selection-start-line="83" selection-start-column="26" selection-end-line="83" selection-end-column="26" />
+            <state relative-caret-position="615">
+              <caret line="36" column="49" lean-forward="false" selection-start-line="36" selection-start-column="49" selection-end-line="36" selection-end-column="49" />
               <folding>
                 <element signature="e#1#20#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="NaiveBayes.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/NaiveBayes.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1063">
+              <caret line="54" column="64" lean-forward="false" selection-start-line="54" selection-start-column="64" selection-end-line="54" selection-end-column="64" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -79,7 +90,7 @@
       <file leaf-file-name="train.csv" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/train.csv">
           <provider selected="true" editor-type-id="LargeFileEditor">
-            <state relative-caret-position="282843">
+            <state relative-caret-position="427">
               <caret line="8571" column="18" lean-forward="false" selection-start-line="8571" selection-start-column="18" selection-end-line="8571" selection-end-column="18" />
             </state>
           </provider>
@@ -88,7 +99,7 @@
       <file leaf-file-name="Model.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../SentimentAnalysis/Model.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-3015">
+            <state relative-caret-position="-3543">
               <caret line="463" column="79" lean-forward="false" selection-start-line="463" selection-start-column="40" selection-end-line="463" selection-end-column="79" />
               <folding />
             </state>
@@ -117,6 +128,8 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
+        <option value="$PROJECT_DIR$/Naive Bayes.py" />
+        <option value="$PROJECT_DIR$/NaiveBayes.py" />
         <option value="$PROJECT_DIR$/Tweets.py" />
       </list>
     </option>
@@ -227,7 +240,14 @@
       <option name="project" value="LOCAL" />
       <updated>1545881108127</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="w2v model trained">
+      <created>1545931630320</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1545931630320</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -286,7 +306,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="some preprocessing and imports" />
     <MESSAGE value="completed preprocessing and w2v model code" />
-    <option name="LAST_COMMIT_MESSAGE" value="completed preprocessing and w2v model code" />
+    <MESSAGE value="w2v model trained" />
+    <option name="LAST_COMMIT_MESSAGE" value="w2v model trained" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -573,13 +594,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/train.csv">
-      <provider selected="true" editor-type-id="LargeFileEditor">
-        <state relative-caret-position="282843">
-          <caret line="8571" column="18" lean-forward="false" selection-start-line="8571" selection-start-column="18" selection-end-line="8571" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Anaconda3/Lib/site-packages/gensim/utils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="238">
@@ -588,18 +602,33 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/train.csv">
+      <provider selected="true" editor-type-id="LargeFileEditor">
+        <state relative-caret-position="427">
+          <caret line="8571" column="18" lean-forward="false" selection-start-line="8571" selection-start-column="18" selection-end-line="8571" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/../SentimentAnalysis/Model.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3015">
+        <state relative-caret-position="-3543">
           <caret line="463" column="79" lean-forward="false" selection-start-line="463" selection-start-column="40" selection-end-line="463" selection-end-column="79" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/NaiveBayes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1063">
+          <caret line="54" column="64" lean-forward="false" selection-start-line="54" selection-start-column="64" selection-end-line="54" selection-end-column="64" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Tweets.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="318">
-          <caret line="83" column="26" lean-forward="false" selection-start-line="83" selection-start-column="26" selection-end-line="83" selection-end-column="26" />
+        <state relative-caret-position="615">
+          <caret line="36" column="49" lean-forward="false" selection-start-line="36" selection-start-column="49" selection-end-line="36" selection-end-column="49" />
           <folding>
             <element signature="e#1#20#0" expanded="true" />
           </folding>
