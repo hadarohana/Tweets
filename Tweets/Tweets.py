@@ -8,8 +8,8 @@ import contractions
 import gensim
 from gensim.models import Word2Vec
 import sklearn
-import NaiveBayes
 from NaiveBayes import NaiveBayes
+from SVM import SVM
 
 df = pd.read_csv("train.csv", encoding = 'latin-1' )
 text = df.iloc[:, 5] # dataframe of tweets
@@ -26,16 +26,44 @@ def main():
     #shuffle and partition dataset
     from sklearn.utils import shuffle
     data = pd.DataFrame({'text': processed_text_list, 'labels': polarity})
-    shuffle(data)
+    data = shuffle(data)
     split_ratio = int(len(processed_text_list) * .8)
-    train_list = data['text'].loc[0:split_ratio].tolist()
-    test_list =  data['text'].loc[split_ratio:len(processed_text_list)].tolist()
+    simple_train = data['text'][:split_ratio] # preprocessed text
+    simple_test =  data['text'][split_ratio:]
     labels_list = data['labels'].tolist()
+    train_labels = labels_list[:split_ratio] # list of labels
+    test_labels = labels_list[split_ratio:]
 
-    naive_bayes = NaiveBayes(train_list, test_list, labels_list)
-    accuracy = naive_bayes.evaluate()
-    print("Naive Bayes accuracy: " + str(accuracy))
+    # get_w2v_array(data=data)
+    # pickle_in = open("w2v_features.pickle", "rb")
+    # w2v_features = pickle.load(pickle_in)
 
+
+
+    # naive_bayes = NaiveBayes(simple_train.tolist(), simple_test.tolist(), labels_list)
+    # accuracy = naive_bayes.evaluate()
+    # print("Naive Bayes accuracy: " + str(accuracy)) #.499
+
+    svm = SVM(simple_train, train_labels, simple_test, test_labels)
+    accuracy = svm.predict()
+    print("SVM accuracy: " + str(accuracy)) #.744 with a=.0000001 and 3000 epochs
+
+
+def get_w2v_array(data):
+    w2v_model = Word2Vec.load('w2v_model')
+    max_len = 0
+    for tweet in data['text']:
+        if len(tweet) > max_len:
+            max_len = len(tweet)
+    print("longest tweet is ")
+    print(max_len)
+    w2v_features = numpy.zeros((len(data), max_len))
+    for i, tweet in enumerate(data['text']):
+        for j, word in enumerate(tweet):
+            print(w2v_model.wv[word])
+            w2v_features[i][j] = w2v_model.wv[word]
+    pickle_out = open("w2v_features.pickle", "wb")
+    pickle.dump(w2v_features, pickle_out)
 
 #cleans, tokenizes, and lemmatizes tweets
 def preprocess_text(text_sample):
