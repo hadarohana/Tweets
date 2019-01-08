@@ -19,17 +19,22 @@ def main():
     pickle_in = open("processed_text_list.pickle", "rb")
     processed_text_list = pickle.load(pickle_in)
     #preprocess_text(train_text)
-
     #train_w2v_model(processed_text_list)
-    #w2v_exploration()
 
     #shuffle and partition dataset
     from sklearn.utils import shuffle
     data = pd.DataFrame({'text': processed_text_list, 'labels': polarity})
-    data = shuffle(data)
+    get_w2v_array(data)
+    w2v_array = pickle.load(open('w2v_features.pickle', 'rb'))
     split_ratio = int(len(processed_text_list) * .8)
+
+    w2v_train = w2v_array[:split_ratio] #w2v averages for each tweet
+    w2v_test = w2v_array[split_ratio:]
+
+    data = shuffle(data)
     simple_train = data['text'][:split_ratio] # preprocessed text
     simple_test =  data['text'][split_ratio:]
+
     labels_list = data['labels'].tolist()
     train_labels = labels_list[:split_ratio] # list of labels
     test_labels = labels_list[split_ratio:]
@@ -38,30 +43,21 @@ def main():
     # pickle_in = open("w2v_features.pickle", "rb")
     # w2v_features = pickle.load(pickle_in)
 
-
-
     # naive_bayes = NaiveBayes(simple_train.tolist(), simple_test.tolist(), labels_list)
     # accuracy = naive_bayes.evaluate()
     # print("Naive Bayes accuracy: " + str(accuracy)) #.499
 
-    svm = SVM(simple_train, train_labels, simple_test, test_labels)
-    accuracy = svm.predict()
-    print("SVM accuracy: " + str(accuracy)) #.744 with a=.0000001 and 3000 epochs
+    # svm = SVM(simple_train, train_labels, simple_test, test_labels)
+    # accuracy = svm.predict()
+    # print("SVM accuracy: " + str(accuracy)) #.744 with a=.0000001 and 3000 epochs
 
-
+# get array of words converted into their average w2v vectors
 def get_w2v_array(data):
     w2v_model = Word2Vec.load('w2v_model')
-    max_len = 0
-    for tweet in data['text']:
-        if len(tweet) > max_len:
-            max_len = len(tweet)
-    print("longest tweet is ")
-    print(max_len)
-    w2v_features = numpy.zeros((len(data), max_len))
+    w2v_features = numpy.zeros(len(data), dtype=object)
     for i, tweet in enumerate(data['text']):
-        for j, word in enumerate(tweet):
-            print(w2v_model.wv[word])
-            w2v_features[i][j] = w2v_model.wv[word]
+        w2v_features[i] = numpy.mean([w2v_model.wv[word] for word in tweet if word in w2v_model.wv.vocab]
+                                     or [numpy.zeros(shape=(1,300))], axis=0)
     pickle_out = open("w2v_features.pickle", "wb")
     pickle.dump(w2v_features, pickle_out)
 
