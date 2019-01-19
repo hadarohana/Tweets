@@ -10,6 +10,7 @@ from gensim.models import Word2Vec
 import sklearn
 from NaiveBayes import NaiveBayes
 from SVM import SVM
+from RandomForest import RandomForest
 
 df = pd.read_csv("train.csv", encoding = 'latin-1' )
 text = df.iloc[:, 5] # dataframe of tweets
@@ -24,7 +25,7 @@ def main():
     #shuffle and partition dataset
     from sklearn.utils import shuffle
     data = pd.DataFrame({'text': processed_text_list, 'labels': polarity})
-    get_w2v_array(data)
+    #get_w2v_array(data)
     w2v_array = pickle.load(open('w2v_features.pickle', 'rb'))
     split_ratio = int(len(processed_text_list) * .8)
 
@@ -50,6 +51,10 @@ def main():
     # svm = SVM(simple_train, train_labels, simple_test, test_labels)
     # accuracy = svm.predict()
     # print("SVM accuracy: " + str(accuracy)) #.744 with a=.0000001 and 3000 epochs
+
+    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'log', max_depth=5, min_leaf=1, n_trees=5)
+    accuracy = random_forest.predict()
+    print("Random Forest accuracy: " + str(accuracy))
 
 # get array of words converted into their average w2v vectors
 def get_w2v_array(data):
