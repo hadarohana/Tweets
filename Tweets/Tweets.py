@@ -28,11 +28,11 @@ def main():
     data = shuffle(data)
     #get_w2v_array(data[:300000])
     w2v_array = pickle.load(open('w2v_features.pickle', 'rb'))
-    num_tweets = 200 #number of tweets to consider
+    num_tweets = 40000 # number of tweets to consider
     w2v_array = shuffle(w2v_array)[:num_tweets]
     split_ratio = int(num_tweets * .8)
 
-    w2v_train = w2v_array[:split_ratio] #w2v averages for each tweet
+    w2v_train = w2v_array[:split_ratio] # w2v averages for each tweet
     w2v_test = w2v_array[split_ratio:]
 
     data = shuffle(data)
@@ -55,7 +55,7 @@ def main():
     # accuracy = svm.predict()
     # print("SVM accuracy: " + str(accuracy)) #.744 with a=.0000001 and 3000 epochs
 
-    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'log2', max_depth=5, min_leaf=1, n_trees=1, model='my_model')
+    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'log2', max_depth=5, min_leaf=2, n_trees=5, model_type='my_model')
     accuracy = random_forest.evaluate()
     print("Random Forest accuracy: " + str(accuracy))
 

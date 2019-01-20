@@ -6,12 +6,12 @@ from sklearn.ensemble import RandomForestClassifier
 class RandomForest:
 
     # Initializes values and trains the model
-    def __init__(self, train_x, test_x, train_y, test_y, max_features, max_depth, min_leaf, n_trees, model):
+    def __init__(self, train_x, test_x, train_y, test_y, max_features, max_depth, min_leaf, n_trees, model_type):
         #data passed in will consist of 300 dimensional array of averaged word vectors representing a tweet
 
         self.test_x, self.test_y = test_x, test_y
-        self.model = model
-        if model == 'my_model':
+        self.model_type = model_type
+        if model_type == 'my_model':
             if max_features == 'log2':
                 self.n_features = (int)(math.log2(len(train_x[0])))
             elif max_features == 'sqrt':
@@ -20,25 +20,25 @@ class RandomForest:
                 self.n_features = max_features
             self.model = Model(train_x, train_y, self.n_features)
             self.trees = self.model.build_model(max_depth, min_leaf, n_trees)
-        if model == 'scikit_model':
+        if model_type == 'scikit_model':
             self.model = RandomForestClassifier(n_estimators=n_trees, min_leaf = min_leaf, max_depth=max_depth, max_features=max_features)
-            self.trees = model.fit(X=train_x, y=train_y)
+            self.trees = self.model.fit(X=train_x, y=train_y)
 
 
     # Returns accuracy of test set on trained model
     def evaluate(self):
         trees = self.trees
-        if self.model == 'my_model':
+        if self.model_type == 'my_model':
             predictions = []
             for document in self.test_x:
                 predictions.append(Model.predict(self = self.model, trees=trees, document=document))
-            correct = 0
+            correct = 0.0
             for i in range(len(predictions)):
                 if(predictions[i] == self.test_y[i]):
                     correct += 1
             return ((float)(correct))/len(predictions)
 
-        if self.model == 'scikit_model':
+        if self.model_type == 'scikit_model':
             return trees.score(X=self.test_x, y=self.test_y)
 # Decision tree node
 class Node:
@@ -60,12 +60,12 @@ class Model:
         for i in range(n_trees):
             tree = self.build_tree(0, self.x, self.y, max_depth, min_leaf)
             trees.append(tree)
+            print('tree' + str(i) + 'of' + str(n_trees))
         return trees
 
     # Returns category predicted by most of the trees
     def predict(self, trees, document):
         predictions = []
-        print(len(trees))
         for tree in trees:
             predictions.append(self.predict_single_tree(tree, document))
         return max(set(predictions), key=predictions.count)
@@ -92,18 +92,18 @@ class Model:
         right_y = list(y[i] for i in right_indexes)
         if(depth >= max_depth or len(left_indexes) == 0 or len(right_indexes) == 0):
             root.category = self.get_most_common_category(y)
-            print(root.category)
         else:
+            root.split_point = (row, col)
             if(len(left_indexes) < min_leaf):
-                self.left = Node(left_x, left_y)
-                self.left.category = self.get_most_common_category(left_y)
+                root.left = Node(left_x, left_y)
+                root.left.category = self.get_most_common_category(left_y)
             else:
-                self.left = self.build_tree(depth+1, left_x, left_y, max_depth, min_leaf)
+                root.left = self.build_tree(depth+1, left_x, left_y, max_depth, min_leaf)
             if(len(right_indexes) < min_leaf):
-                self.right = Node(right_x, right_y)
-                self.right.category = self.get_most_common_category(right_y)
+                root.right = Node(right_x, right_y)
+                root.right.category = self.get_most_common_category(right_y)
             else:
-                self.right = self.build_tree(depth+1, right_x, right_y, max_depth, min_leaf)
+                root.right = self.build_tree(depth+1, right_x, right_y, max_depth, min_leaf)
         return root
 
     # Returns class with most common occurence in binary classification
@@ -122,7 +122,7 @@ class Model:
         row, col, gini_index = None, None, None
         for row_index in range(len(x)):
             for feature_index in feature_indexes:       # feature_index is the index of the tweet vector to split by
-                left, right = self.split(x, row_index, feature_index) # TODO: how to split this data????
+                left, right = self.split(x, row_index, feature_index)
                 curr_gini = self.get_gini(left, right)
                 if(gini_index == None or curr_gini < gini_index):
                     gini_index = curr_gini
@@ -148,8 +148,10 @@ class Model:
         gini_index = 0
         for split in left_split, right_split:
             score = 0
-            for polarity in [0,4]:
-                p = (self.get_vals(list=self.y, indexes=split)).count(polarity)
+            if(len(split) == 0):
+                continue
+            for category in set(self.y):
+                p = (float)(self.get_vals(list=self.y, indexes=split).count(category))/(len(split))
                 score += p*p
             gini_index += (1-score)*len(split)/(len(left_split) + len(right_split))
         return gini_index
