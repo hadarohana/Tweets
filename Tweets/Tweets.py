@@ -25,9 +25,11 @@ def main():
     #shuffle and partition dataset
     from sklearn.utils import shuffle
     data = pd.DataFrame({'text': processed_text_list, 'labels': polarity})
-    #get_w2v_array(data)
+    get_w2v_array(data)
     w2v_array = pickle.load(open('w2v_features.pickle', 'rb'))
-    split_ratio = int(len(processed_text_list) * .8)
+    num_tweets = 20000 #number of tweets to consider
+    w2v_array = shuffle(w2v_array)[:num_tweets]
+    split_ratio = int(num_tweets * .8)
 
     w2v_train = w2v_array[:split_ratio] #w2v averages for each tweet
     w2v_test = w2v_array[split_ratio:]
@@ -52,17 +54,16 @@ def main():
     # accuracy = svm.predict()
     # print("SVM accuracy: " + str(accuracy)) #.744 with a=.0000001 and 3000 epochs
 
-    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'log', max_depth=5, min_leaf=1, n_trees=5)
-    accuracy = random_forest.predict()
+    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'log', max_depth=5, min_leaf=1, n_trees=2)
+    accuracy = random_forest.evaluate()
     print("Random Forest accuracy: " + str(accuracy))
 
 # get array of words converted into their average w2v vectors
 def get_w2v_array(data):
     w2v_model = Word2Vec.load('w2v_model')
-    w2v_features = numpy.zeros(len(data), dtype=object)
+    w2v_features = numpy.zeros(shape=(len(data), 300), dtype=object)
     for i, tweet in enumerate(data['text']):
-        w2v_features[i] = numpy.mean([w2v_model.wv[word] for word in tweet if word in w2v_model.wv.vocab]
-                                     or [numpy.zeros(shape=(1,300))], axis=0)
+        w2v_features[i] = numpy.mean([w2v_model.wv[word] for word in tweet if word in w2v_model.wv.vocab], axis=0)
     pickle_out = open("w2v_features.pickle", "wb")
     pickle.dump(w2v_features, pickle_out)
 
