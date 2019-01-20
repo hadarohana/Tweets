@@ -25,9 +25,10 @@ def main():
     #shuffle and partition dataset
     from sklearn.utils import shuffle
     data = pd.DataFrame({'text': processed_text_list, 'labels': polarity})
-    get_w2v_array(data)
+    data = shuffle(data)
+    #get_w2v_array(data[:300000])
     w2v_array = pickle.load(open('w2v_features.pickle', 'rb'))
-    num_tweets = 20000 #number of tweets to consider
+    num_tweets = 200 #number of tweets to consider
     w2v_array = shuffle(w2v_array)[:num_tweets]
     split_ratio = int(num_tweets * .8)
 
@@ -54,7 +55,7 @@ def main():
     # accuracy = svm.predict()
     # print("SVM accuracy: " + str(accuracy)) #.744 with a=.0000001 and 3000 epochs
 
-    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'log', max_depth=5, min_leaf=1, n_trees=2)
+    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'log2', max_depth=5, min_leaf=1, n_trees=1, model='my_model')
     accuracy = random_forest.evaluate()
     print("Random Forest accuracy: " + str(accuracy))
 
@@ -64,6 +65,7 @@ def get_w2v_array(data):
     w2v_features = numpy.zeros(shape=(len(data), 300), dtype=object)
     for i, tweet in enumerate(data['text']):
         w2v_features[i] = numpy.mean([w2v_model.wv[word] for word in tweet if word in w2v_model.wv.vocab], axis=0)
+    print('done making w2v array')
     pickle_out = open("w2v_features.pickle", "wb")
     pickle.dump(w2v_features, pickle_out)
 
@@ -126,7 +128,6 @@ def preprocess_text(text_sample):
 
 # word2vec model trained on entire sentiment 140 corpus (including neutral text)
 def train_w2v_model(processed_text_list):
-
     from gensim.models import Phrases
     bigrams = Phrases(processed_text_list, min_count = 2) # bigram model
     w2v_model = Word2Vec(bigrams[processed_text_list], size=300,  min_count=3, window=5, sg=1)
@@ -134,17 +135,6 @@ def train_w2v_model(processed_text_list):
     w2v_model.train(bigrams[processed_text_list], total_examples= len(bigrams[processed_text_list]), epochs=10)
     print("model training complete")
     w2v_model.save("w2v_model")
-
-
-def w2v_exploration():
-   w2v_model = Word2Vec.load("w2v_model")
-   print(list(w2v_model.wv.vocab))
-
-
-
-#def process_features_and_labels:
-
-
 
 if __name__ == "__main__":
     main()

@@ -1,35 +1,46 @@
 import math
 import random
-import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+
+# Random forest classifier implemented both from scratch and using the scikit-learn model
 class RandomForest:
 
-    # initializes values and trains the model
-    def __init__(self, train_x, test_x, train_y, test_y, max_features, max_depth, min_leaf, n_trees ):
-        #data passed in will consist of 1 dimensional array of averaged word vectors representing a tweet
-        if max_features == 'log':
-            self.n_features = (int)(math.log2(len(train_x[0])))
-        elif max_features == 'sqrt':
-            self.n_features = (int)(math.sqrt(len(train_x[0])))
-        else:
-            self.n_features = max_features
-        self.test_x,  self.test_y= test_x, test_y
-        self.model = Model(train_x, train_y, self.n_features)
-        self.trees = self.model.build_model(max_depth, min_leaf, n_trees)
+    # Initializes values and trains the model
+    def __init__(self, train_x, test_x, train_y, test_y, max_features, max_depth, min_leaf, n_trees, model):
+        #data passed in will consist of 300 dimensional array of averaged word vectors representing a tweet
 
-    # returns accuracy of test set on trained model
+        self.test_x, self.test_y = test_x, test_y
+        self.model = model
+        if model == 'my_model':
+            if max_features == 'log2':
+                self.n_features = (int)(math.log2(len(train_x[0])))
+            elif max_features == 'sqrt':
+                self.n_features = (int)(math.sqrt(len(train_x[0])))
+            else:
+                self.n_features = max_features
+            self.model = Model(train_x, train_y, self.n_features)
+            self.trees = self.model.build_model(max_depth, min_leaf, n_trees)
+        if model == 'scikit_model':
+            self.model = RandomForestClassifier(n_estimators=n_trees, min_leaf = min_leaf, max_depth=max_depth, max_features=max_features)
+            self.trees = model.fit(X=train_x, y=train_y)
+
+
+    # Returns accuracy of test set on trained model
     def evaluate(self):
         trees = self.trees
-        predictions = []
-        for document in self.test_x:
-            predictions.append(Model.predict(self = self.model, trees=trees, document=document))
-        correct = 0
-        for i in range(len(predictions)):
-            if(predictions[i] == self.test_y[i]):
-                correct += 1
-        return ((float)(correct))/len(predictions)
+        if self.model == 'my_model':
+            predictions = []
+            for document in self.test_x:
+                predictions.append(Model.predict(self = self.model, trees=trees, document=document))
+            correct = 0
+            for i in range(len(predictions)):
+                if(predictions[i] == self.test_y[i]):
+                    correct += 1
+            return ((float)(correct))/len(predictions)
 
-
-
+        if self.model == 'scikit_model':
+            return trees.score(X=self.test_x, y=self.test_y)
+# Decision tree node
 class Node:
     def __init__(self, x, y):
         self.x, self.y = x, y
@@ -38,11 +49,12 @@ class Node:
         self.split_point = None # (tweet index, feature index)
         self.category = None  # category if node is a leaf
 
+# Random forest model implemented using gini index for impurity measure
 class Model:
-
     def __init__(self, x, y, n_features):
         self.x, self.y, self.n_features= x, y, n_features
 
+    # Initializes the forest
     def build_model(self, max_depth, min_leaf, n_trees):
         trees = []
         for i in range(n_trees):
@@ -50,7 +62,7 @@ class Model:
             trees.append(tree)
         return trees
 
-    # returns category predicted by most of the trees
+    # Returns category predicted by most of the trees
     def predict(self, trees, document):
         predictions = []
         print(len(trees))
@@ -58,7 +70,7 @@ class Model:
             predictions.append(self.predict_single_tree(tree, document))
         return max(set(predictions), key=predictions.count)
 
-    # returns predicted category given a tree and feature
+    # Returns predicted category given a tree and feature
     def predict_single_tree(self, tree, document):
         if tree.category is not None:
             return tree.category
@@ -69,17 +81,18 @@ class Model:
         else:
             return self.predict_single_tree(tree.right, document)
 
-    # recursively builds the decision tree
+    # Recursively builds the decision tree
     def build_tree(self, depth, x, y, max_depth, min_leaf):
         root = Node(x, y)
-        root.split_index = self.get_split_point(x)
-        left_indexes, right_indexes = self.split(x, root.split_index)
+        row, col = self.get_split_point(x)
+        left_indexes, right_indexes = self.split(x, row, col)
         left_x = list(x[i] for i in left_indexes)
         right_x = list(x[i] for i in right_indexes)
         left_y = list(y[i] for i in left_indexes)
         right_y = list(y[i] for i in right_indexes)
         if(depth >= max_depth or len(left_indexes) == 0 or len(right_indexes) == 0):
             root.category = self.get_most_common_category(y)
+            print(root.category)
         else:
             if(len(left_indexes) < min_leaf):
                 self.left = Node(left_x, left_y)
@@ -93,15 +106,17 @@ class Model:
                 self.right = self.build_tree(depth+1, right_x, right_y, max_depth, min_leaf)
         return root
 
-    # returns class with most common occurence in binary classification
+    # Returns class with most common occurence in binary classification
     def get_most_common_category(self, y):
         return max(set(y), key =y.count)
 
+    # Returns random selection of specified number of indexes for features to use
     def get_feature_indexes(self, x):
         selected_indexes = [i for i in range(len(x[0]))]
         random.shuffle(selected_indexes)
         return selected_indexes[:self.n_features]
 
+    # Uses brute force to identify the optimal split point in terms of gini index
     def get_split_point(self, x):
         feature_indexes = self.get_feature_indexes(x)
         row, col, gini_index = None, None, None
@@ -115,15 +130,12 @@ class Model:
                     col = feature_index
         return row, col
 
-    #splits the data based on a specific feature and returns left and right lists of indexes
+    # Splits the data based on a specific feature and returns left and right lists of indexes
     def split(self, x, row_index, feature_index):
         left = []
         right = []
         selected_val = x[row_index][feature_index]
-        print(feature_index)
-        print(len(x))
         for index in range(len(x)):
-            print(index)
             if x[index][feature_index] < selected_val:
                 left.append(index)
             else:
@@ -131,7 +143,7 @@ class Model:
         return left, right
 
     # Returns gini index of given tree
-    # left and right are lists of indexes of data for the proposed split
+    # left_split and right_split are lists of indexes of data for the proposed split
     def get_gini(self, left_split, right_split):
         gini_index = 0
         for split in left_split, right_split:
