@@ -26,10 +26,10 @@ def main():
     from sklearn.utils import shuffle
     data = pd.DataFrame({'text': processed_text_list, 'labels': polarity})
     data = shuffle(data)
-    #get_w2v_array(data[:300000])
+    #get_w2v_array(data[:400000])
     w2v_array = pickle.load(open('w2v_features.pickle', 'rb'))
-    num_tweets = 40000 # number of tweets to consider
-    w2v_array = shuffle(w2v_array)[:num_tweets]
+    num_tweets = 400000 # number of tweets to consider
+    w2v_array = w2v_array[:num_tweets]
     split_ratio = int(num_tweets * .8)
 
     w2v_train = w2v_array[:split_ratio] # w2v averages for each tweet
@@ -39,7 +39,7 @@ def main():
     simple_train = data['text'][:split_ratio] # preprocessed text
     simple_test =  data['text'][split_ratio:]
 
-    labels_list = data['labels'].tolist()
+    labels_list = data['labels'].tolist()[:num_tweets]
     train_labels = labels_list[:split_ratio] # list of labels
     test_labels = labels_list[split_ratio:]
 
@@ -51,25 +51,28 @@ def main():
     # accuracy = naive_bayes.evaluate()
     # print("Naive Bayes accuracy: " + str(accuracy)) #.499
 
-    # svm = SVM(simple_train, train_labels, simple_test, test_labels)
+    # svm = SVM(simple_train, train_labels, simple_test, test_labels, 3000, .0000001)
     # accuracy = svm.predict()
     # print("SVM accuracy: " + str(accuracy)) #.744 with a=.0000001 and 3000 epochs
 
-    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'log2', max_depth=5, min_leaf=2, n_trees=5, model_type='my_model')
+    random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'sqrt', max_depth=25, min_leaf=2, n_trees=500, model_type='scikit')
     accuracy = random_forest.evaluate()
     print("Random Forest accuracy: " + str(accuracy))
 
 # get array of words converted into their average w2v vectors
 def get_w2v_array(data):
+    import math
     w2v_model = Word2Vec.load('w2v_model')
-    w2v_features = numpy.zeros(shape=(len(data), 300), dtype=object)
+    w2v_features = numpy.zeros(shape=(len(data), 300), dtype='float32')
     for i, tweet in enumerate(data['text']):
         w2v_features[i] = numpy.mean([w2v_model.wv[word] for word in tweet if word in w2v_model.wv.vocab], axis=0)
+        if(math.isnan(w2v_features[i][0])):
+            w2v_features[i] = numpy.zeros(300)
     print('done making w2v array')
     pickle_out = open("w2v_features.pickle", "wb")
     pickle.dump(w2v_features, pickle_out)
 
-#cleans, tokenizes, and lemmatizes tweets
+# Cleans, tokenizes, and lemmatizes tweets
 def preprocess_text(text_sample):
     from bs4 import BeautifulSoup
     from nltk.corpus import stopwords
@@ -81,7 +84,7 @@ def preprocess_text(text_sample):
     processed_text_sample = []
     for text in text_sample:
         processed_text = ""
-        soup = BeautifulSoup(text, features="html.parser") #parse html tags into words
+        soup = BeautifulSoup(text, features="html.parser") # parse html tags into words
         text = soup.getText()
         text = re.sub(r"@[A-Za-z0-9]+", '', text) # get rid of @ notation
         text = re.sub('http?://[A-Za-z0-9./]+ | https?://[A-Za-z0-9./]+', '', text)  # get rid of html tags
@@ -116,8 +119,6 @@ def preprocess_text(text_sample):
                 converted_pos = 'v'
             elif(pos.startswith('R')):
                 converted_pos = 'r'
-            #to_list = list(tagged_word)
-            #to_list[0] = ((lemmatizer.lemmatize(word = tagged_word[0], pos = converted_pos)))
             processed_text_sample[i][j] = lemmatizer.lemmatize(word = tagged_word[0], pos = converted_pos)
     processed_text_sample = processed_text_sample.apply(lambda  x: x[1:])
     #saves dataframe containing lists of processed words
