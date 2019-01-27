@@ -1,4 +1,7 @@
 
+#ideas: get rid of words that don't appear frequently in naive bayes. try the scikit learn algorithm and see
+#check your word vectors, makes sure they make sense. test the model on pretrained vectors
+#try random forest on small dataset and trace it
 import pandas as pd
 import numpy
 import re
@@ -17,16 +20,18 @@ text = df.iloc[:, 5] # dataframe of tweets
 polarity = df.iloc[:, 0] # dataframe of polarities
 
 def main():
+    plot_zipf()
+    word2vec_explore()
     pickle_in = open("processed_text_list.pickle", "rb")
     processed_text_list = pickle.load(pickle_in)
     #preprocess_text(train_text)
-    #train_w2v_model(processed_text_list)
+    train_w2v_model(processed_text_list)
 
     #shuffle and partition dataset
     from sklearn.utils import shuffle
     data = pd.DataFrame({'text': processed_text_list, 'labels': polarity})
     data = shuffle(data)
-    #get_w2v_array(data[:400000])
+    get_w2v_array(data[:400000])
     w2v_array = pickle.load(open('w2v_features.pickle', 'rb'))
     num_tweets = 400000 # number of tweets to consider
     w2v_array = w2v_array[:num_tweets]
@@ -43,6 +48,7 @@ def main():
     train_labels = labels_list[:split_ratio] # list of labels
     test_labels = labels_list[split_ratio:]
 
+
     # get_w2v_array(data=data)
     # pickle_in = open("w2v_features.pickle", "rb")
     # w2v_features = pickle.load(pickle_in)
@@ -58,7 +64,34 @@ def main():
     random_forest = RandomForest(w2v_train, w2v_test, train_labels, test_labels, 'sqrt', max_depth=25, min_leaf=2, n_trees=500, model_type='scikit')
     accuracy = random_forest.evaluate()
     print("Random Forest accuracy: " + str(accuracy))
+    #poor performance: next step is to try with tfidf vectors and only use words that appear between 5 and 500 times in the corpus. Consider bagging and pruning.
+def plot_zipf():
+    import plotly
+    import plotly.plotly as py
+    import plotly.graph_objs as go
+    plotly.tools.set_credentials_file(username='hadarohana', api_key='DvO469BCrrthG3ZxyI9L')
+    w2v_model = Word2Vec.load('w2v_model')
+    word_frequency = {}
+    for word in w2v_model.wv.vocab:
+        word_frequency[word] = w2v_model.wv.vocab[word].count
+    word_frequency = dict(sorted(word_frequency.items(), key=lambda x: x[1], reverse=True))
+    rank = [x for x in word_frequency.keys()][:250]
+    frequency = list(x for x in word_frequency.values())[:250]
+    trace = go.Bar(x=rank, y = frequency)
+    layout = go.Layout(title="Twitter data for 250 most common words in 1 million tweets", xaxis={'title': 'words ordered by rank'}, yaxis={'title': 'frequency'})
+    data = [trace]
+    figure = go.Figure(data=data, layout=layout)
+    py.iplot(figure, filename='zipf')
 
+
+def word2vec_explore():
+    w2v_model = Word2Vec.load('w2v_model')
+    i = 0
+    # for word in w2v_model.wv.vocab:
+    #     print(str(i) + ' ' + word)
+    #     i += 1
+    print(len(w2v_model.wv.vocab))
+    print(w2v_model.wv.most_similar(positive=['good']))
 # get array of words converted into their average w2v vectors
 def get_w2v_array(data):
     import math
@@ -131,11 +164,20 @@ def preprocess_text(text_sample):
 def train_w2v_model(processed_text_list):
     from gensim.models import Phrases
     bigrams = Phrases(processed_text_list, min_count = 2) # bigram model
-    w2v_model = Word2Vec(bigrams[processed_text_list], size=300,  min_count=3, window=5, sg=1)
+    w2v_model = Word2Vec(bigrams[processed_text_list], size=300,  min_count=30, window=5, sg=1)
     print("model created")
     w2v_model.train(bigrams[processed_text_list], total_examples= len(bigrams[processed_text_list]), epochs=10)
     print("model training complete")
     w2v_model.save("w2v_model")
+
+def generate_embedding_matrix():
+    model = gensim.models.Word2Vec.load("w2v_model")
+    embedding_dim = len(model.wv[model.wv.index2word[0]])
+    embedding_matrix = numpy.zeros((len(model.wv.vocab), embedding_dim))
+    for i in range(len(model.wv.vocab)):
+        embedding_vector = model.wv[model.wv.index2word[i]]
+        if embedding_vector is not None:
+            embedding_matrix[i] = embedding_vector
 
 if __name__ == "__main__":
     main()

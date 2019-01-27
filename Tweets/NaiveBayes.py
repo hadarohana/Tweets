@@ -11,7 +11,7 @@ class NaiveBayes:
         self.test_set = test_list
         self.labels_list = labels_list
 
-    # return word count dictionary for each word in text_list. Adds words to global vocab
+    # Return word count dictionary for each word in text_list. Adds words to global vocab
     def get_word_counts(self, text_list):
         word_counts = {}
         for tweet in text_list:
@@ -20,7 +20,7 @@ class NaiveBayes:
                 self.vocab.add(word)
         return word_counts
 
-    # initialize log priors and get word counts for each category
+    # Initialize log priors and get word counts for each category
     def initialize(self):
         neg_list = []
         pos_list = []
@@ -51,6 +51,7 @@ class NaiveBayes:
                         pos_count = 0
                     if neg_count == None:
                         neg_count = 0
+                    # add laplace smoothing term alpha=1 to avoid zero probabilities
                     log_w_given_pos = math.log((pos_count + 1.0)/ (len(self.word_counts['pos']) + len(self.vocab)))
                     log_w_given_neg = math.log((neg_count + 1.0)/ (len(self.word_counts['neg']) + len(self.vocab)))
                     pos_score += log_w_given_pos

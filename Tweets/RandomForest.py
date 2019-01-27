@@ -20,8 +20,8 @@ class RandomForest:
                 self.n_features = max_features
             self.model = Model(train_x, train_y, self.n_features)
             self.trees = self.model.build_model(max_depth, min_leaf, n_trees)
-        if model_type == 'scikit_model':
-            self.model = RandomForestClassifier(n_estimators=n_trees, min_leaf = min_leaf, max_depth=max_depth, max_features=max_features)
+        else:
+            self.model = RandomForestClassifier(n_estimators=n_trees, min_samples_leaf= min_leaf, max_depth=max_depth, max_features=max_features)
             self.trees = self.model.fit(X=train_x, y=train_y)
 
 
@@ -37,8 +37,7 @@ class RandomForest:
                 if(predictions[i] == self.test_y[i]):
                     correct += 1
             return ((float)(correct))/len(predictions)
-
-        if self.model_type == 'scikit_model':
+        else:
             return trees.score(X=self.test_x, y=self.test_y)
 # Decision tree node
 class Node:
@@ -60,7 +59,7 @@ class Model:
         for i in range(n_trees):
             tree = self.build_tree(0, self.x, self.y, max_depth, min_leaf)
             trees.append(tree)
-            print('tree' + str(i) + 'of' + str(n_trees))
+            print('tree ' + str(i+1) + ' of ' + str(n_trees))
         return trees
 
     # Returns category predicted by most of the trees
